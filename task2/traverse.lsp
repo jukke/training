@@ -4,13 +4,15 @@
 
 (defun traverse (func tree fget-node fget-children fmake-node)
   "Tree TREE traversal. Apply function FUNC to each node."
-  (funcall fmake-node 
-           (funcall func (funcall fget-node tree)) 
-           (mapcar #'(lambda (child)
-                       (if (null child)
-                         nil
-                         (traverse func child fget-node fget-children fmake-node)))
-                   (funcall fget-children tree))))
+  (if (null tree)
+    nil
+    (funcall fmake-node 
+             (funcall func (funcall fget-node tree)) 
+             (mapcar #'(lambda (child)
+                         (if (null child)
+                           nil
+                           (traverse func child fget-node fget-children fmake-node)))
+                     (funcall fget-children tree)))))
 
 (defun fget-node (node)
   "Value of node NODE."
