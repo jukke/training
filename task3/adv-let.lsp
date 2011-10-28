@@ -4,12 +4,12 @@
 
 (defun get-value (elem tables)
   "Get value of variable ELEM from list of hashtables TABLES."
-  (if tables
+  (and 
+    tables
     (let ((res (gethash elem (car tables))))
       (if res
         res
-        (get-value elem (cdr tables))))
-    nil))
+        (get-value elem (cdr tables))))))
 
 (defun check-elem (elem tables)
   "Check and return numberic value of element ELEM using hashtable with variables TABLE."

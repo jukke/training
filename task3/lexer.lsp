@@ -11,49 +11,56 @@
 ;;
 ;; For example: 1*(2+3) -> ((num 1) mul obt (num 2) plus (num 3) cbt)
 
-;; characters for number
-(setq *numbers* '(#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9))
+(defvar *numbers* '(#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9)
+  "Characters for number.")
 
-;; characters for separator
-(setq *separators* '(#\+ #\- #\* #\/ #\( #\)))
+(defvar *table-numbers* (make-hash-table :test #'eq)
+  "Hashtable with numbers.")
 
-;; hashtable with numbers
-(setq table-numbers (make-hash-table))
-(setf (gethash #\0 table-numbers) 0)
-(setf (gethash #\1 table-numbers) 1)
-(setf (gethash #\2 table-numbers) 2)
-(setf (gethash #\3 table-numbers) 3)
-(setf (gethash #\4 table-numbers) 4)
-(setf (gethash #\5 table-numbers) 5)
-(setf (gethash #\6 table-numbers) 6)
-(setf (gethash #\7 table-numbers) 7)
-(setf (gethash #\8 table-numbers) 8)
-(setf (gethash #\9 table-numbers) 9)
+(defvar *separators* '(#\+ #\- #\* #\/ #\( #\))
+  "Characters for separator.")
 
-;; hashtable with separators
-(setq table-separators (make-hash-table))
-(setf (gethash #\+ table-separators) 'plus) 
-(setf (gethash #\- table-separators) 'minus)
-(setf (gethash #\* table-separators) 'mul)
-(setf (gethash #\/ table-separators) 'div)
-(setf (gethash #\( table-separators) 'obt)
-(setf (gethash #\) table-separators) 'cbt)
+(defvar *table-separators* (make-hash-table :test #'eq)
+  "Hashtable with separators.")
+
+(defun init-table-numbers ()
+  "Initialize hashtable with numbers."
+  (setf (gethash #\0 *table-numbers*) 0)
+  (setf (gethash #\1 *table-numbers*) 1)
+  (setf (gethash #\2 *table-numbers*) 2)
+  (setf (gethash #\3 *table-numbers*) 3)
+  (setf (gethash #\4 *table-numbers*) 4)
+  (setf (gethash #\5 *table-numbers*) 5)
+  (setf (gethash #\6 *table-numbers*) 6)
+  (setf (gethash #\7 *table-numbers*) 7)
+  (setf (gethash #\8 *table-numbers*) 8)
+  (setf (gethash #\9 *table-numbers*) 9))
+
+(defun init-table-separators ()
+  "Initialize hashtable with separators."
+  (setf (gethash #\+ *table-separators*) 'plus) 
+  (setf (gethash #\- *table-separators*) 'minus)
+  (setf (gethash #\* *table-separators*) 'mul)
+  (setf (gethash #\/ *table-separators*) 'div)
+  (setf (gethash #\( *table-separators*) 'obt)
+  (setf (gethash #\) *table-separators*) 'cbt))
 
 (defun number-former (lst &optional (res 0))
   "Form a number from head of list LST and returns it with tail."
   (if (member (car lst) *numbers*)
     (number-former 
       (cdr lst) 
-      (+ (gethash (car lst) table-numbers) (* 10 res)))
+      (+ (gethash (car lst) *table-numbers*) (* 10 res)))
     (values 
       (list 'num res) 
       lst)))
 
 (defun separator-former (lst)
   "Form a separator from head of list LST and returns it with tail."
-  (if (member (car lst) *separators*)
+  (and 
+    (member (car lst) *separators*)
     (values 
-      (gethash (car lst) table-separators)
+      (gethash (car lst) *table-separators*)
       (cdr lst))))
 
 (defun error-former (lst)
@@ -64,17 +71,19 @@
 
 (defun dispatcher (lst)
   "Dispatcher of lexer. Check a head of list LST and call former-function."
-  (if lst
+  (and 
+    lst
     (multiple-value-bind (formed tail)
       (cond
         ((member (car lst) *numbers*) (number-former lst)) 
         ((member (car lst) *separators*) (separator-former lst))
         (t (error-former lst)))
-      (cons formed (dispatcher tail)))
-    nil))
+      (cons formed (dispatcher tail)))))
 
 (defun lexer (str)
   "Lexer for string STR."
+  (init-table-numbers)
+  (init-table-separators)
   (dispatcher (coerce str 'list)))
 
 ;; tests

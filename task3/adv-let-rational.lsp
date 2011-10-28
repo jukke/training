@@ -10,40 +10,52 @@
 
 (defun add-rat (x1 x2)
   "Summ of rationals X1 and X2. Parameters can be rational."
-  (let ((num1 (mrational-num x1)) (num2 (mrational-num x2)) (den1 (mrational-den x1)) (den2 (mrational-den x2))) 
+  (let ((num1 (mrational-num x1)) 
+        (num2 (mrational-num x2)) 
+        (den1 (mrational-den x1)) 
+        (den2 (mrational-den x2))) 
     (make-mrational 
       :num (+ (* num1 den2) (* num2 den1))
       :den (* den1 den2))))
 
 (defun sub-rat (x1 x2)
   "Subtraction of X1 and X2."
-  (let ((num1 (mrational-num x1)) (num2 (mrational-num x2)) (den1 (mrational-den x1)) (den2 (mrational-den x2))) 
+  (let ((num1 (mrational-num x1)) 
+        (num2 (mrational-num x2)) 
+        (den1 (mrational-den x1)) 
+        (den2 (mrational-den x2))) 
     (make-mrational 
       :num (- (* num1 den2) (* num2 den1))
       :den (* den1 den2))))
 
 (defun mul-rat (x1 x2)
   "Multiply of X1 and X2."
-  (let ((num1 (mrational-num x1)) (num2 (mrational-num x2)) (den1 (mrational-den x1)) (den2 (mrational-den x2))) 
+  (let ((num1 (mrational-num x1)) 
+        (num2 (mrational-num x2)) 
+        (den1 (mrational-den x1)) 
+        (den2 (mrational-den x2))) 
     (make-mrational 
       :num (* num1 num2)
       :den (* den1 den2))))
 
 (defun div-rat (x1 x2)
   "Division of X1 and X2."
-  (let ((num1 (mrational-num x1)) (num2 (mrational-num x2)) (den1 (mrational-den x1)) (den2 (mrational-den x2))) 
+  (let ((num1 (mrational-num x1)) 
+        (num2 (mrational-num x2)) 
+        (den1 (mrational-den x1)) 
+        (den2 (mrational-den x2))) 
     (make-mrational 
       :num (* num1 den2)
       :den (* den1 num2))))
 
 (defun get-value (elem tables)
   "Get value of variable ELEM from list of hashtables TABLES."
-  (if tables
+  (and 
+    tables
     (let ((res (gethash elem (car tables))))
-      (if res
+      (or
         res
-        (get-value elem (cdr tables))))
-    nil))
+        (get-value elem (cdr tables))))))
 
 (defun check-elem (elem tables)
   "Check and return numberic value of element ELEM using hashtable with variables TABLE."
