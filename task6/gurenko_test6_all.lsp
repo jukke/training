@@ -37,19 +37,46 @@
         (make-list-interval (car lst) (cadr lst)))
       (cddr lst))))
 
+(defun find-sign (sign lst &optional res)
+  "Find (and SIGN <number>) if list LST and return number and list without this combination."
+  (if (cddr lst)
+    (if (and
+          (eq 'and (first lst))
+          (eq sign (second lst))
+          (numberp (third lst)))
+      (values 
+        (third lst)
+        (append res (cdddr lst)))
+      (find-sign sign (cdr lst) (append res (list (car lst)))))
+    (values nil nil)))
+
 (defun operate-more-less (lst res)
   "Operate situations: #[> num1 and < num 2]."
   (if (and 
         (null res)
-        (numberp (second lst))
-        (eq 'and (third lst))
-        (eq '< (fourth lst))
-        (numberp (fifth lst)))
-    (values
-      (append 
-        res
-        (make-list-interval (second lst) (fifth lst)))
-      (cdddr (cddr lst)))))
+        (numberp (second lst)))
+    (multiple-value-bind (num tail)
+      (find-sign '< (cddr lst))
+      (if num
+        (values
+          (append 
+            res
+            (make-list-interval (second lst) num))
+          tail)))))
+
+(defun operate-less-more (lst res)
+  "Operate situations: #[< num1 and > num 2]."
+  (if (and
+        (null res)
+        (numberp (second lst)))
+    (multiple-value-bind (num tail)
+      (find-sign '> (cddr lst))
+      (if num
+        (values
+          (append
+            res
+            (make-list-interval num (second lst)))
+          tail)))))
 
 (defun operate-or (lst res)
   "Operate situations: #[... or num1 ...] and #[... or num1 num2 ...]."
@@ -93,6 +120,7 @@
         ((numberp (car lst)) (operate-num lst res))
         ((eq 'and (car lst)) (operate-and lst res))
         ((eq 'or (car lst)) (operate-or lst res))
+        ((eq '< (car lst)) (operate-less-more lst res))
         ((eq '> (car lst)) (operate-more-less lst res)))
       (scan-list tail head))
     res))
@@ -113,3 +141,5 @@
 (format t "~A~% -> ~A~%" "#[10 15 and 13 17]" #[10 15 and 13 17])
 (format t "~A~% -> ~A~%" "#[> 10 and < 15]" #[> 10 and < 15])
 (format t "~A~% -> ~A~%" "#[2 7 or 10 15 and < 10]" #[2 7 or 10 15 and < 10])
+(format t "~A~% -> ~A~%" "#[> 10 and > 12 and < 15]" #[> 10 and > 12 and < 15])
+(format t "~A~% -> ~A~%" "#[< 10 and > 6 and < 15]" #[< 10 and > 6 and < 15])
