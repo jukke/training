@@ -158,6 +158,7 @@
                                (make-var-info :kind ',(first var) :val ,(third var))))
                  vars)
        (let ,(forthis-var-helper vars 'get-value)
+         (declare (ignorable ,@(mapcar (lambda (var) (second var)) vars)))
          ,@body))))
 
 (defun forthis-var-helper (vars fun)
