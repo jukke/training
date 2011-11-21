@@ -95,10 +95,11 @@
   (if (and (or (node-stmt-p stm)
                (node-var-p stm))
            (or (node-stmt*-p stmts)
-               (node-var-p stmts)))
+               (node-var-p stmts)
+               (null stmts)))
     (if stmts
       (list 'stmt* stm stmts)
-      (list 'stmt* stm))
+      (list 'stmt* stm (list 'stmt*)))
     (throw-error "TREE/MAKE-NODE-STMT*: incorrect values." nil no-errors)))
 
 (defun make-node (node-kind params &key no-errors)
@@ -214,16 +215,15 @@
 
 (defun node-stmt*-p (node)
   "Check if NODE is a STMT* node."
-  (if node
-    (let ((node-kind (first node))
-          (stm (second node))
-          (stmts (third node)))
-      (and (eq 'stmt* node-kind)
-           (or (node-stmt-p stm)
-               (node-var-p stm))
-           (or (node-stmt*-p stmts)
-               (node-var-p stmts))))
-    t))
+  (or (equalp node '(stmt*))
+      (let ((node-kind (first node))
+            (stm (second node))
+            (stmts (third node)))
+        (and (eq 'stmt* node-kind)
+             (or (node-stmt-p stm)
+                 (node-var-p stm))
+             (or (node-stmt*-p stmts)
+                 (node-var-p stmts))))))
 
 (defun node-p (lst)
   "Check if LST is a NODE of a syntax tree."
@@ -314,6 +314,8 @@
 (defun print-node-stmt* (node)
   "Print node STMT*."
   (cond
+    ((equalp node '(stmt*))
+     (concatenate 'string nil))
     ((node-stmt*-p node)
      (let ((stm (second node))
            (stmts (third node)))
@@ -362,16 +364,29 @@
 ;; TREE TRAVERSE
 ;; -------------
 
-(defun traverse (tree func)
-  "Traverse syntax TREE and apply function FUNC to each node."
+(defun ntraverse (tree func)
+  "Destructive traverse syntax TREE and apply function FUNC to each node."
   (cond
     ((listp tree)
      (let* ((new-node (mapcar (lambda (tree-node)
-                                (traverse tree-node func))
+                                (ntraverse tree-node func))
                               tree))
             (matched-node (funcall func new-node)))
        (or matched-node
            new-node)))
+    ((symbolp tree)
+     tree)
+    ((numberp tree)
+     tree)))
+
+(defun traverse (tree func)
+  "Traverse syntax TREE and apply function FUNC to each node."
+  (cond
+    ((listp tree)
+     (funcall func (mapcar (lambda (tree-node)
+                             (traverse tree-node func))
+                           tree))
+     tree)
     ((symbolp tree)
      tree)
     ((numberp tree)

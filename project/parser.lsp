@@ -178,13 +178,21 @@
 (defun stmt-list (lst &key no-errors)
   "Rule: <stmt-list>."
   (if lst
-    (multiple-value-bind (stm tail)
-      (stmt lst :no-errors no-errors)
-      (if stm
-        (multiple-value-bind (stm-lst tail)
-          (stmt-list tail :no-errors no-errors)
-          (values (make-node 'stmt* (list stm stm-lst) :no-errors no-errors) tail))
-        (throw-error "PARSER/STMT-LIST: statement not found -> ~S" lst no-errors)))
+    (if (fact-var lst :no-errors t)
+      (if (cdr lst)
+        (multiple-value-bind (var tail)
+          (stmt lst :no-errors no-errors)
+          (multiple-value-bind (stm-lst tail)
+            (stmt-list tail :no-errors no-errors)
+            (values (make-node 'stmt* (list var stm-lst tail) :no-errors no-errors) tail)))
+        (values (car lst) (cdr lst)))
+      (multiple-value-bind (stm tail)
+        (stmt lst :no-errors no-errors)
+        (if stm
+          (multiple-value-bind (stm-lst tail)
+            (stmt-list tail :no-errors no-errors)
+            (values (make-node 'stmt* (list stm stm-lst) :no-errors no-errors) tail))
+          (throw-error "PARSER/STMT-LIST: statement not found -> ~S" lst no-errors))))
     (values nil nil)))
 
 (defun parser (lst &key no-errors)

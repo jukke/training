@@ -40,6 +40,7 @@
                     (otherwise (list 'expr 'num value))))
              (id (case node-name
                    (id value)
+                   (def value)
                    (otherwise (list 'expr 'id value))))
              (otherwise value))
            kind))
@@ -184,18 +185,27 @@
        ,@(forthis-var-helper vars 'add-value)
        (cond ,@(mapcar
                  (lambda (cnd)
-                   `((aif (match ,(car cnd) ,trm)
+                   `((aif (and (eq (if (listp ,(car cnd))
+                                     (car ,(car cnd))
+                                     (get-value ,(car cnd)))
+                                   (first ,trm))
+                               (match ,(car cnd) ,trm))
                           (progn (mapc (lambda (var)
                                          (add-value (first var)
                                                     (make-var-info :kind (get-value (first var))
                                                                    :val (second var))))
                                        it)
                                  (let ,(forthis-var-helper vars 'get-value)
-                                   (declare (ignorable ,@(mapcan (lambda (var) (cdr var)) vars)))
+                                   (declare (ignorable ,@(reduce (lambda (res x) (append (cdr x) res)) vars :initial-value nil)))
                                    ,@(cdr cnd))))))
                  body)))))
 
 (defmacro /. (term vars &body body)
   "Rewrite tree TERM according to rules in BODY."
-  `(traverse ,term
+  `(ntraverse ,term
             (lambda (x) (forthis x ,vars ,@body))))
+
+(defmacro forall (term vars &body body)
+  "Traverse syntax tree and perform some operations according to rules in BODY."
+  `(traverse ,term
+             (lambda (x) (forthis x ,vars ,@body))))
